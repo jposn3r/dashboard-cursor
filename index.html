@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CursorDev Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0a0a0f;
+            color: #ffffff;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .top-menu {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            background-color: #1a1a2e;
+            padding: 10px 20px;
+            border-radius: 15px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00ffff;
+        }
+        .menu-items {
+            display: flex;
+            gap: 20px;
+        }
+        .menu-item {
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .menu-item:hover, .menu-item.active {
+            background-color: #2a2a4a;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            background-color: #2a2a4a;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: #00ffff;
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        .card {
+            background-color: #1a1a2e;
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: transform 0.3s;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.1);
+        }
+        .card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            color: #00ffff;
+        }
+        .trends-card {
+            grid-column: span 2;
+            grid-row: span 2;
+            background: linear-gradient(135deg, #1a1a2e, #2a2a4a);
+            display: flex;
+            flex-direction: column;
+        }
+        .trends-visualization {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+        }
+        .trend-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: rgba(0, 255, 255, 0.1);
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        .trend-term {
+            font-weight: bold;
+            color: #ff00ff;
+        }
+        .trend-bar {
+            height: 10px;
+            background-color: #00ffff;
+            border-radius: 5px;
+        }
+        .chart-container {
+            height: 150px;
+            background-color: #2a2a4a;
+            border-radius: 10px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+        .chart {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #00ffff 0%, #ff00ff 100%);
+            mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M0 100 C 20 80, 40 90, 60 70 S 80 50, 100 60" fill="none" stroke="white" stroke-width="4"/></svg>') 0 0/100% 100%;
+            -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M0 100 C 20 80, 40 90, 60 70 S 80 50, 100 60" fill="none" stroke="white" stroke-width="4"/></svg>') 0 0/100% 100%;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #1a1a2e;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 15px;
+            width: 80%;
+            max-width: 800px;
+            box-shadow: 0 0 20px #00ffff;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover,
+        .close:focus {
+            color: #fff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .placeholder-widget {
+            background-color: rgba(0, 255, 255, 0.1);
+            border: 2px dashed #00ffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            color: #00ffff;
+        }
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            .trends-card {
+                grid-column: span 1;
+                grid-row: span 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="top-menu">
+            <div class="logo">CursorDev</div>
+            <nav class="menu-items">
+                <span class="menu-item active" data-page="home">Home</span>
+                <span class="menu-item" data-page="planet">Planet</span>
+                <span class="menu-item" data-page="internet">Internet</span>
+            </nav>
+            <div class="action-buttons">
+                <button class="btn">🔍</button>
+                <button class="btn">🔔</button>
+                <button class="btn">👤</button>
+            </div>
+        </header>
+        
+        <main id="dashboard" class="dashboard">
+            <!-- Dashboard content will be dynamically inserted here -->
+        </main>
+    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        const dashboardContent = {
+            home: `
+                <div class="card trends-card placeholder-widget">
+                    <p>Add Main Widget Here</p>
+                </div>
+                <div class="card placeholder-widget">
+                    <p>Add Widget</p>
+                </div>
+                <div class="card placeholder-widget">
+                    <p>Add Widget</p>
+                </div>
+                <div class="card placeholder-widget">
+                    <p>Add Widget</p>
+                </div>
+            `,
+            planet: `
+                <div class="card trends-card">
+                    <div class="card-header">
+                        <h2>Environmental Metrics</h2>
+                        <span>Global Data</span>
+                    </div>
+                    <div class="trends-visualization">
+                        <div class="trend-item">
+                            <span class="trend-term">Reforestation Progress</span>
+                            <div class="trend-bar" style="width: 65%;"></div>
+                        </div>
+                        <div class="trend-item">
+                            <span class="trend-term">Ocean Plastic Reduction</span>
+                            <div class="trend-bar" style="width: 40%;"></div>
+                        </div>
+                        <div class="trend-item">
+                            <span class="trend-term">Sustainable Agriculture</span>
+                            <div class="trend-bar" style="width: 55%;"></div>
+                        </div>
+                        <div class="trend-item">
+                            <span class="trend-term">Air Quality Improvement</span>
+                            <div class="trend-bar" style="width: 30%;"></div>
+                        </div>
+                        <div class="trend-item">
+                            <span class="trend-term">Biodiversity Conservation</span>
+                            <div class="trend-bar" style="width: 45%;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Carbon Footprint</h3>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart"></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Renewable Energy Adoption</h3>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart"></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Climate Change Indicators</h3>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart"></div>
+                    </div>
+                </div>
+            `,
+            internet: `
+                <div class="card trends-card">
+                    <div class="card-header">
+                        <h2>Global Overview</h2>
+                        <span>Real-time Data</span>
+                    </div>
+                    <div class="trends-visualization">
+                        <div class="trend-item">
+                            <span class="trend-term">Active Internet Users</span>
+                            <div class="trend-bar" style="width: 85%;"></div>
+                        </div>
+                        <div class="trend-item">
+                            <span class="trend-term">Global Energy Consumption</span>
+                            <div class="trend-bar" style="width: 70%;"></div>
+                        </div>
+                        <div class="trend-item">
+                            <span class="trend-term">Carbon Emission Levels</span>
+                            <div class="trend-bar" style="width: 60%;"></div>
+                        </div>
+                        <div class="trend-item">
+                            <span class="trend-term">Renewable Energy Usage</span>
+                            <div class="trend-bar" style="width: 40%;"></div>
+                        </div>
+                        <div class="trend-item">
+                            <span class="trend-term">E-waste Recycled</span>
+                            <div class="trend-bar" style="width: 25%;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Internet Traffic</h3>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart"></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Environmental Impact</h3>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart"></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Global Tech Adoption</h3>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart"></div>
+                    </div>
+                </div>
+            `
+        };
+
+        const dashboard = document.getElementById('dashboard');
+        const menuItems = document.querySelectorAll('.menu-item');
+        const modal = document.getElementById('modal');
+        const modalBody = document.getElementById('modal-body');
+        const closeBtn = document.querySelector('.close');
+
+        function loadDashboard(page) {
+            dashboard.innerHTML = dashboardContent[page];
+            attachCardListeners();
+        }
+
+        function attachCardListeners() {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                card.addEventListener('click', () => {
+                    modalBody.innerHTML = card.innerHTML;
+                    modal.style.display = 'block';
+                });
+            });
+        }
+
+        menuItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                menuItems.forEach(i => i.classList.remove('active'));
+                e.target.classList.add('active');
+                loadDashboard(e.target.dataset.page);
+            });
+        });
+
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target == modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        // Load the home dashboard by default
+        loadDashboard('home');
+    </script>
+</body>
+</html>
